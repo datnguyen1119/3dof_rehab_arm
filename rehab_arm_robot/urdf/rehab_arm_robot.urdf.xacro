@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rehab_arm_robot">
+
+  <!-- Properties -->
+  <xacro:property name="package_path" value="package://rehab_arm_robot" />
+  <xacro:property name="mesh_dir" value="${package_path}/meshes" />
+  <xacro:property name="default_color" value="0.75294 0.75294 0.75294 1" />
+  <xacro:property name="hand_color" value="0.79216 0.81961 0.93333 1" />
+
+  <!-- Link Macro -->
+  <xacro:macro name="robot_link" params="name mass origin_inertial_xyz origin_inertial_rpy ixx ixy ixz iyy iyz izz mesh_file color">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="${origin_inertial_xyz}" rpy="${origin_inertial_rpy}" />
+        <mass value="${mass}" />
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_file}" />
+        </geometry>
+        <material name="">
+          <color rgba="${color}" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_file}" />
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- Joint Macro -->
+  <xacro:macro name="revolute_joint" params="name parent child origin_xyz origin_rpy axis_xyz lower_limit upper_limit effort velocity">
+    <joint name="${name}" type="revolute">
+      <origin xyz="${origin_xyz}" rpy="${origin_rpy}" />
+      <parent link="${parent}" />
+      <child link="${child}" />
+      <axis xyz="${axis_xyz}" />
+      <limit lower="${lower_limit}" upper="${upper_limit}" effort="${effort}" velocity="${velocity}" />
+    </joint>
+  </xacro:macro>
+
+  <!-- World to base_link connection -->
+  <link name="world"/>
+  <joint name="world_dummy_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world" />
+    <child link="dummy_link" />
+  </joint>
+  <link name="dummy_link"/>
+  <joint name="dummy_base_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="dummy_link" />
+    <child link="base_link" />
+  </joint>
+
+  <!-- Links -->
+  <xacro:robot_link name="base_link" mass="6.6256"
+    origin_inertial_xyz="0.029788 -0.044895 -0.025928" origin_inertial_rpy="0 0 0"
+    ixx="0.18532" ixy="3.2441E-17" ixz="-6.848E-18"
+    iyy="0.5053" iyz="1.2064E-17" izz="0.68358"
+    mesh_file="${mesh_dir}/base_link.STL" color="${default_color}" />
+
+  <xacro:robot_link name="shoulder_link" mass="0.050013"
+    origin_inertial_xyz="-1.1102E-16 -0.057517 0.098111" origin_inertial_rpy="0 0 0"
+    ixx="9.5931E-05" ixy="-1.2282E-19" ixz="-2.1663E-19"
+    iyy="6.7571E-05" iyz="-3.5649E-05" izz="4.7153E-05"
+    mesh_file="${mesh_dir}/shoulder_link.STL" color="${default_color}" />
+
+  <xacro:robot_link name="upper_arm_link" mass="2.0719"
+    origin_inertial_xyz="-0.025772 0.09796 -0.11257" origin_inertial_rpy="0 0 0"
+    ixx="0.014827" ixy="-0.00117" ixz="-0.0011721"
+    iyy="0.014917" iyz="-0.0019872" izz="0.0049095"
+    mesh_file="${mesh_dir}/upper_arm_link.STL" color="${default_color}" />
+
+  <xacro:robot_link name="lower_arm_link" mass="0.33023"
+    origin_inertial_xyz="-0.003833 0.062573 -0.14707" origin_inertial_rpy="0 0 0"
+    ixx="0.0010261" ixy="-4.3675E-06" ixz="2.0066E-06"
+    iyy="0.00095783" iyz="-0.00018897" izz="0.00016101"
+    mesh_file="${mesh_dir}/lower_arm_link.STL" color="${default_color}" />
+
+  <xacro:robot_link name="fake_hand_link" mass="0.8131"
+    origin_inertial_xyz="0 -0.086168 -3.3307E-16" origin_inertial_rpy="0 0 0"
+    ixx="0.0016843" ixy="-1.9111E-19" ixz="-1.4671E-18"
+    iyy="0.00092006" iyz="-1.584E-18" izz="0.0013868"
+    mesh_file="${mesh_dir}/fake_hand_link.STL" color="${hand_color}" />
+
+  <!-- Joints -->
+  <xacro:revolute_joint name="joint_0"
+    parent="base_link" child="shoulder_link"
+    origin_xyz="0.0719496042388023 -0.541555143198902 0.267693516942176"
+    origin_rpy="-0.174532925199427 0 1.6460476242513"
+    axis_xyz="0 0.173648177666925 -0.984807753012209"
+    lower_limit="-1.57" upper_limit="1.57" effort="0" velocity="0" />
+
+  <xacro:revolute_joint name="joint_1"
+    parent="shoulder_link" child="upper_arm_link"
+    origin_xyz="0 0 0.0361684029192207"
+    origin_rpy="0 0.0173771635808177 -3.14159265358979"
+    axis_xyz="0 1 0"
+    lower_limit="-1.57" upper_limit="1.57" effort="0" velocity="0" />
+
+  <xacro:revolute_joint name="joint_2"
+    parent="upper_arm_link" child="lower_arm_link"
+    origin_xyz="0 0 -0.22"
+    origin_rpy="0 -0.033816 0"
+    axis_xyz="0 1 0"
+    lower_limit="-1.57" upper_limit="0" effort="0" velocity="0" />
+
+  <xacro:revolute_joint name="joint_3"
+    parent="lower_arm_link" child="fake_hand_link"
+    origin_xyz="0.00049921 0.0106 -0.21838"
+    origin_rpy="1.5616 0.26164 1.5354"
+    axis_xyz="0 1 0"
+    lower_limit="-1.57" upper_limit="1.57" effort="0" velocity="0" />
+
+</robot>
